@@ -1,0 +1,2 @@
+export type UpdateType = "CREATED" | "SHIPPED" | "LOCATION_CHANGED" | "DELIVERED" | "DELAYED" | "LOST" | "CANCELED" | "NOTE_ADDED";
+_";
