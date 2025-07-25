@@ -10,5 +10,7 @@ data class ShipmentViewModel(
     val currentLocation: String,
     val expectedDelivery: Instant?,
     val notes: List<String>,
-    val updates: List<ShippingUpdateDomainModel>
+    val updates: List<ShippingUpdateDomainModel>,
+    val abnormalEvents: List<String>,
+    val shipmentType: String
 )

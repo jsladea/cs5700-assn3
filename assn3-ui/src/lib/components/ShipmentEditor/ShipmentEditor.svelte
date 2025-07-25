@@ -25,7 +25,8 @@
     "SHIPPED",
     "LOCATION CHANGED",
     "DELAYED",
-    "ADD NOTE"
+    "ADD NOTE",
+    "CREATED"
   ];
 
   let otherInfoLabel = $derived((() => {
@@ -37,8 +38,26 @@
         return "Location:";
       case "ADD NOTE":
         return "Note:";
+      case "CREATED":
+        return "Shipment Type:";
       default:
         return undefined;
+    }
+  })());
+
+  let otherInfoPlaceHolder = $derived((() => {
+    switch (updateType) {
+      case "SHIPPED":
+      case "DELAYED":
+        return "Enter expected delivery timestamp";
+      case "LOCATION CHANGED":
+        return "Enter new location";
+      case "ADD NOTE":
+        return "Enter note";
+      case "CREATED":
+        return "standard, express, overnight, bulk";
+      default:
+        return "";
     }
   })());
 
@@ -68,6 +87,7 @@
   bind:shipmentId
   bind:timestamp
   otherInfoLabel={otherInfoLabel}
+  otherInfoPlaceHolder={otherInfoPlaceHolder}
   bind:otherInfo
   onSubmitClick={handleSubmitClick}
   submitDisabled={!allFieldsComplete}

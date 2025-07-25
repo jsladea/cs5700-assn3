@@ -1,33 +1,17 @@
 package ui
 
-import TrackingSimulator
-import constants.UpdateType
-import models.domainmodels.ShipmentDomainModel
-import models.interfaces.IObserver
-import updatestrategies.CanceledStrategy
-import updatestrategies.CreatedStrategy
-import updatestrategies.DelayedStrategy
-import updatestrategies.DeliveredStrategy
-import updatestrategies.IShipmentUpdateStrategy
-import updatestrategies.LocationStrategy
-import updatestrategies.LostStrategy
-import updatestrategies.NoteAddedStrategy
-import updatestrategies.ShippedStrategy
-import java.awt.EventQueue.invokeLater
-import java.awt.event.ActionEvent
-import java.io.File
+import models.viewmodels.ShipmentViewModel
 import java.awt.*
+import java.awt.event.ActionEvent
 import javax.swing.*
-import javax.swing.SwingUtilities.invokeLater
 
-class ShipmentTrackingUI(private val shipments: Map<String, ShipmentDomainModel>) : JFrame("Shipment Tracker") {
+class ShipmentTrackingUI : JFrame("Shipment Tracker") {
     private val textField = JTextField(20)
     private val trackButton = JButton("Track")
-    private val cardPanel = JPanel().apply {
-        layout = BoxLayout(this, BoxLayout.Y_AXIS)
-    }
+    private val cardPanel = JPanel().apply { layout = BoxLayout(this, BoxLayout.Y_AXIS) }
     private val scrollPane = JScrollPane(cardPanel)
     private val shipmentCards = mutableMapOf<String, JPanel>()
+    private val adapter: ShipmentTrackingAdapter
 
     init {
         defaultCloseOperation = EXIT_ON_CLOSE
@@ -44,6 +28,8 @@ class ShipmentTrackingUI(private val shipments: Map<String, ShipmentDomainModel>
         add(inputPanel, BorderLayout.NORTH)
         add(scrollPane, BorderLayout.CENTER)
 
+        adapter = ShipmentTrackingAdapter { id, viewModel -> updateCardUI(id, viewModel) }
+
         trackButton.addActionListener(this::onTrack)
 
         pack()
@@ -51,83 +37,47 @@ class ShipmentTrackingUI(private val shipments: Map<String, ShipmentDomainModel>
         isVisible = true
     }
 
-    private fun updateCardUI(shipment: ShipmentDomainModel, card: JPanel, removeButton: JButton) {
+    private fun updateCardUI(id: String, viewModel: ShipmentViewModel) {
+        val card = shipmentCards.getOrPut(id) {
+            val newCard = JPanel().apply {
+                layout = BoxLayout(this, BoxLayout.Y_AXIS)
+                border = BorderFactory.createTitledBorder("Shipment $id")
+            }
+            cardPanel.add(newCard)
+            cardPanel.revalidate()
+            cardPanel.repaint()
+            newCard
+        }
         card.removeAll()
-
-        card.add(JLabel("Status: ${shipment.status}"))
-        card.add(JLabel("Location: ${shipment.currentLocation}"))
-        card.add(JLabel("Expected Delivery: ${shipment.expectedDelivery ?: "Currently Unavailable"}"))
-        card.add(JLabel("Notes: ${shipment.notes.joinToString()}"))
+        card.add(JLabel("Status: ${viewModel.status}"))
+        card.add(JLabel("Location: ${viewModel.currentLocation}"))
+        card.add(JLabel("Expected Delivery: ${viewModel.expectedDelivery ?: "Currently Unavailable"}"))
+        card.add(JLabel("Notes: ${viewModel.notes.joinToString()}"))
+        val removeButton = JButton("Remove Tracking").apply {
+            addActionListener { onRemove(id) }
+        }
         card.add(removeButton)
         card.revalidate()
         card.repaint()
     }
 
-
     private fun onTrack(e: ActionEvent) {
         val id = textField.text.trim()
-        val shipment = shipments[id]
-        if (shipment == null) {
-            JOptionPane.showMessageDialog(this, "Shipment with ID '$id' not found.")
-        } else {
-            if (!shipmentCards.containsKey(id)) {
-                val card = JPanel().apply {
-                    layout = BoxLayout(this, BoxLayout.Y_AXIS)
-                    border = BorderFactory.createTitledBorder("Shipment $id")
-                }
-
-                lateinit var observer: IObserver<ShipmentDomainModel>
-
-                val removeButton = JButton("Remove Tracking").apply {
-                    addActionListener {
-                        shipmentCards.remove(id)?.let { cardPanel.remove(it) }
-                        shipment.removeObserver(observer)
-                        cardPanel.revalidate()
-                        cardPanel.repaint()
-                    }
-                }
-
-
-                cardPanel.add(card)
-                shipmentCards[id] = card
-                cardPanel.revalidate()
-                cardPanel.repaint()
-
-                observer = object : IObserver<ShipmentDomainModel> {
-                    override fun update(subject: ShipmentDomainModel) {
-                        updateCardUI(shipment, card, removeButton)
-                    }
-                }
-
-                shipment.addObserver(observer)
-                updateCardUI(shipment, card, removeButton)
+        if (!shipmentCards.containsKey(id)) {
+            try {
+                adapter.trackShipment(id)
+            } catch (ex: NoSuchElementException) {
+                JOptionPane.showMessageDialog(this, "Shipment with ID '$id' not found.")
+            } catch (ex: IllegalStateException) {
+                JOptionPane.showMessageDialog(this, ex.message)
             }
         }
     }
 
-    companion object {
-
-        private val strategyMap = mutableMapOf<UpdateType, IShipmentUpdateStrategy>().apply {
-            put(UpdateType.CREATED, CreatedStrategy())
-            put(UpdateType.SHIPPED, ShippedStrategy())
-            put(UpdateType.LOCATION, LocationStrategy())
-            put(UpdateType.DELIVERED, DeliveredStrategy())
-            put(UpdateType.DELAYED, DelayedStrategy())
-            put(UpdateType.LOST, LostStrategy())
-            put(UpdateType.CANCELED, CanceledStrategy())
-            put(UpdateType.NOTE_ADDED, NoteAddedStrategy())
-        }
-
-        fun launchWithSimulation(filePath: String) {
-            val shipments = mutableMapOf<String, ShipmentDomainModel>()
-            val file = File(filePath)
-
-            val simulator = TrackingSimulator(shipments, strategyMap)
-            simulator.startSimulation(file)
-
-            SwingUtilities.invokeLater {
-                ShipmentTrackingUI(shipments)
-            }
-        }
+    private fun onRemove(id: String) {
+        adapter.removeShipmentTracking(id)
+        shipmentCards.remove(id)?.let { cardPanel.remove(it) }
+        cardPanel.revalidate()
+        cardPanel.repaint()
     }
 }

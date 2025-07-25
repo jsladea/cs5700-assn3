@@ -4,7 +4,7 @@
   import Button from '../../Button/Button.svelte';
 
   const uid = $props.id();
-  let { id=uid, updateTypes, updateType, onUpdateTypeSelect, shipmentId = $bindable(), timestamp = $bindable(), otherInfoLabel, otherInfo = $bindable(), onSubmitClick, submitDisabled=false } = $props<{
+  let { id=uid, updateTypes, updateType, onUpdateTypeSelect, shipmentId = $bindable(), timestamp = $bindable(), otherInfoLabel, otherInfoPlaceHolder="", otherInfo = $bindable(), onSubmitClick, submitDisabled=false } = $props<{
     id?: string;
     updateTypes: string[];
     updateType: string;
@@ -13,6 +13,7 @@
     timestamp: string;
     otherInfoLabel: string | null | undefined;
     otherInfo: string;
+    otherInfoPlaceHolder?: string;
     onSubmitClick: () => void;
     submitDisabled?: boolean;
   }>();
@@ -48,6 +49,7 @@
     <TextBox
       id="{id}-other-info-textbox"
       label={otherInfoLabel}
+      placeholder={otherInfoPlaceHolder}
       bind:value={otherInfo}
     />
   {/if}
