@@ -53,7 +53,7 @@ class ShipmentTrackingUI : JFrame("Shipment Tracker") {
         card.add(JLabel("Shipment Type: ${viewModel.shipmentType}"))
         card.add(JLabel("Location: ${viewModel.currentLocation}"))
         card.add(JLabel("Expected Delivery: ${viewModel.expectedDelivery ?: "Currently Unavailable"}"))
-        card.add(JLabel("Notes: ${viewModel.notes.joinToString()}"))
+        card.add(JLabel("Notes: ${viewModel.notes.plus(viewModel.abnormalEvents).joinToString()}"))
         val removeButton = JButton("Remove Tracking").apply {
             addActionListener { onRemove(id) }
         }
