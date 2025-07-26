@@ -1,9 +1,10 @@
 <script lang="ts">
-  import type { UpdateType } from '../../../assets/models/UpdateType';
+  import { createShipment, updateShipment } from '../../utils/ShipmentApi';
+  import { convertStringToUpdateType } from '../../utils/UpdateTypeUtils';
   import ShipmentEditorUI from './ShipmentEditorUI/ShipmentEditorUI.svelte';
 
   const uid = $props.id();
-  let { id=uid } = $props<{id?: string;}>();
+  let { id=uid, onRequest } = $props<{id?: string; onRequest: (response: string) => void}>();
 
   const updateTypes = [
     "CREATED",
@@ -66,16 +67,31 @@
   function handleUpdateTypeSelect(value: string) {
     updateType = value;
     otherInfo = "";
+    timestamp = "";
   }
 
-  function handleSubmitClick() {
-    // Will implement request sending later
-    console.log({
-      updateType: updateType,
-      shipmentId: shipmentId,
+  const handleSubmitClick = async () => {
+    const shipment = {
+      id: shipmentId,
       timestamp: timestamp,
-      otherInfo: otherInfo
-    });
+      otherInfo: otherInfo || undefined,
+      updateType: convertStringToUpdateType(updateType)
+    };
+
+    let result = undefined;
+    try {
+      if(updateType === "CREATED") {
+        result = await createShipment(shipment);
+      } else {
+        result = await updateShipment(shipment);
+      }
+      onRequest(JSON.stringify(result, null, 2));
+    }
+    catch (error) {
+      console.error("Error submitting shipment:", error);
+      onRequest(JSON.stringify(error, null, 2));
+    }
+    
   }
 </script>
 

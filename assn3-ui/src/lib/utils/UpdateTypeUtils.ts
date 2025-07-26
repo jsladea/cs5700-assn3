@@ -18,4 +18,27 @@ const convertStringToUpdateType = (type: string): UpdateType => {
   }
 };
 
-export {convertStringToUpdateType};
+const coverUpdateTypeToBackendString = (type: UpdateType): string => {
+  switch (type) {
+    case "CREATED":
+      return "created";
+    case "SHIPPED":
+      return "shipped";
+    case "LOCATION_CHANGED":
+      return "location";
+    case "DELIVERED":
+      return "delivered";
+    case "DELAYED":
+      return "delayed";
+    case "LOST":
+      return "lost";
+    case "CANCELED":
+      return "canceled";
+    case "NOTE_ADDED":
+      return "noteadded";
+    default:
+      throw new Error(`Unknown update type: ${type}`);
+  }
+};
+
+export {convertStringToUpdateType, coverUpdateTypeToBackendString};

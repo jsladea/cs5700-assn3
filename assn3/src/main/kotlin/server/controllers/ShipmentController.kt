@@ -11,8 +11,12 @@ object ShipmentController {
     fun register(route: Route) {
         route.post("/shipment/create") {
             val viewModel = call.receive<ShippingUpdateViewModel>()
-            val shipment = ShipmentService.createShipment(viewModel)
-            call.respond(shipment)
+            try {
+                val shipment = ShipmentService.createShipment(viewModel)
+                call.respond(shipment)
+            } catch (e: Exception) {
+                call.respondText("Shipment already exists", status = io.ktor.http.HttpStatusCode.Conflict)
+            }
         }
 
         route.patch("/shipment/update") {

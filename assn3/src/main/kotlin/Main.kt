@@ -4,22 +4,39 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.routing.routing
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.plugins.callloging.CallLogging
 import server.controllers.ShipmentController
 import ui.ShipmentTrackingUI
 import io.ktor.server.application.*
 import javax.swing.SwingUtilities
 
+import io.ktor.server.plugins.statuspages.StatusPages
+
 fun main() {
-    // Start Ktor server in the background (non-blocking)
     embeddedServer(Netty, port = 8080) {
-        install(ContentNegotiation) { json() }
-        install(CORS) { anyHost() }
+        install(ContentNegotiation) {
+            json()
+        }
+        install(CallLogging)
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                cause.printStackTrace()
+                throw cause
+            }
+        }
+        install(CORS) {
+            anyHost()
+            allowHeader("Content-Type")
+            allowMethod(io.ktor.http.HttpMethod.Get)
+            allowMethod(io.ktor.http.HttpMethod.Post)
+            allowMethod(io.ktor.http.HttpMethod.Patch)
+            allowMethod(io.ktor.http.HttpMethod.Options)
+        }
         routing {
             ShipmentController.register(this)
         }
     }.start(wait = false)
 
-    // Launch the UI
     SwingUtilities.invokeLater {
         ShipmentTrackingUI()
     }
