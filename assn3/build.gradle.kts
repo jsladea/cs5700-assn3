@@ -25,6 +25,8 @@ dependencies {
     testImplementation("io.ktor:ktor-client-content-negotiation:2.3.9")
     testImplementation("io.ktor:ktor-client-core:2.3.9")
     testImplementation("io.ktor:ktor-client-cio:2.3.9")
+    testImplementation("org.assertj:assertj-swing-junit:3.17.1")
+    testImplementation("org.assertj:assertj-core:3.24.2")
 }
 
 tasks.test {
